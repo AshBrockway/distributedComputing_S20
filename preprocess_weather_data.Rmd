@@ -1,0 +1,74 @@
+---
+title: "preprocess_weather_data"
+author: "Ashley Brockway"
+date: "3/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r PACKAGE & LIB INSTALLATION}
+library(tidyverse)
+library(here)
+```
+
+
+```{r READING IN DATA}
+# humindity 
+humid.all <- data.frame(read.csv(here("data", "weather", "humidity.csv")))
+
+# wind speed 
+wind.all <- data.frame(read.csv(here("data", "weather","wind_speed.csv")))
+
+# temp 
+temp.all <- data.frame(read.csv(here("data", "weather","temperature.csv")))
+
+# string descriptions 
+desc.all <- data.frame(read.csv(here("data", "weather","weather_description.csv")))
+```
+
+```{r SUBSETTING AND BINDING NUMERIC WEATHER DATA}
+min.date <- as.POSIXct("2014-04-01 00:00:00")
+max.date <- as.POSIXct("2014-09-30 22:59:00")
+
+hum <- humid.all %>% 
+  select(date.hum = datetime, humidity=New.York) %>% 
+  mutate(date.hum=as.POSIXct(date.hum, format="%Y-%m-%d %H:%M:%S")) %>% 
+  filter(date.hum >= min.date & date.hum <= max.date)
+
+wind <- wind.all %>%
+  select(date.wind=datetime, winds=New.York) %>% 
+  mutate(date.wind=as.POSIXct(date.wind, format="%Y-%m-%d %H:%M:%S")) %>% 
+  filter(date.wind >= min.date & date.wind <= max.date)
+
+
+temp <- temp.all %>% 
+  select(date.temp=datetime, temper=New.York) %>% 
+  mutate(date.temp=as.POSIXct(date.temp , format="%Y-%m-%d %H:%M:%S")) %>% 
+  filter(date.temp >= min.date & date.temp <= max.date)
+
+
+desc <- desc.all %>% 
+  select(date.desc=datetime, description=New.York) %>% 
+  mutate(date.desc=as.POSIXct(date.desc, format="%Y-%m-%d %H:%M:%S")) %>% 
+  filter(date.desc >= min.date & date.desc <= max.date)
+
+```
+
+```{r CHECK IF DATES ARE THE SAME}
+# three trues indicate that all datetime values are identical 
+
+identical(desc$date.desc,temp$date.temp)
+identical(temp$date.temp, wind$date.wind)
+identical(wind$date.wind, hum$date.hum)
+```
+
+```{r}
+weather.data <- data.frame(hum, wind[,2], temp[,2], desc[,2])
+names(weather.data) <- c('date_time', 'humidity', 'wind', 'temp', 'description')
+head(weather.data)
+```
+
